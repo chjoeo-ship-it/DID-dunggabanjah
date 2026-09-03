@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Digilib ITB Downloader</title>
 </head>
 
@@ -10,30 +11,115 @@
 
     <h1>Digilib ITB Downloader</h1>
 
-    <label>ID / Token</label>
+    <label for="documentId">ID / Token</label>
     <br>
-    <input type="text" id="documentId" placeholder="Contoh: 341829">
+
+    <input
+        type="text"
+        id="documentId"
+        placeholder="Contoh: 341829"
+    >
 
     <br><br>
 
-    <label>Nama File</label>
+    <label for="filename">Nama File</label>
     <br>
-    <input type="text" id="filename" placeholder="Contoh: 2024 DIS PP SARIPUDIN 1-ABSTRAK">
+
+    <input
+        type="text"
+        id="filename"
+        placeholder="Contoh: 2024 DIS PP SARIPUDIN 1-ABSTRAK"
+    >
 
     <br><br>
 
-    <button onclick="downloadPDF()">Download PDF</button>
+    <button onclick="downloadPDF()">
+        Download PDF
+    </button>
 
     <p id="status">Status: Menunggu...</p>
 
-    <script>
-        async function downloadPDF() {
-            const documentId = document.getElementById('documentId').value;
-            const filename = document.getElementById('filename').value;
 
-            document.getElementById('status').textContent =
-                'ID: ' + documentId + ' | File: ' + filename;
+    <script>
+
+        async function downloadPDF() {
+
+            const documentId =
+                document.getElementById('documentId').value.trim();
+
+            const filename =
+                document.getElementById('filename').value.trim();
+
+            const status =
+                document.getElementById('status');
+
+
+            // Cek input
+            if (!documentId) {
+
+                status.textContent =
+                    'ID / Token harus diisi.';
+
+                return;
+            }
+
+
+            if (!filename) {
+
+                status.textContent =
+                    'Nama file harus diisi.';
+
+                return;
+            }
+
+
+            try {
+
+                status.textContent =
+                    'Menghubungi Digilib ITB...';
+
+
+                // Request ke Digilib ITB
+                const response = await fetch(
+                    `https://digilib.itb.ac.id/gdl/generate_token/${documentId}`
+                );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        `HTTP ${response.status}`
+                    );
+
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                console.log(
+                    'Response Digilib:',
+                    data
+                );
+
+
+                status.textContent =
+                    'Berhasil mendapatkan URL.';
+
+
+            } catch (error) {
+
+                console.error(error);
+
+
+                status.textContent =
+                    'Gagal: ' + error.message;
+
+            }
+
         }
+
     </script>
 
 </body>
