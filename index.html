@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digilib ITB Downloader</title>
+</head>
+
+<body>
+
+    <h1>Digilib ITB Downloader</h1>
+
+    <label>ID / Token</label>
+    <br>
+    <input type="text" id="documentId" placeholder="Contoh: 341829">
+
+    <br><br>
+
+    <label>Nama File</label>
+    <br>
+    <input type="text" id="filename" placeholder="Contoh: 2024 DIS PP SARIPUDIN 1-ABSTRAK">
+
+    <br><br>
+
+    <button onclick="downloadPDF()">Download PDF</button>
+
+    <p id="status">Status: Menunggu...</p>
+
+    <script>
+        async function downloadPDF() {
+            const documentId = document.getElementById('documentId').value;
+            const filename = document.getElementById('filename').value;
+
+            document.getElementById('status').textContent =
+                'ID: ' + documentId + ' | File: ' + filename;
+        }
+    </script>
+
+</body>
+</html>
