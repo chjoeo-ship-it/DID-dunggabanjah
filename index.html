@@ -54,63 +54,228 @@
                 document.getElementById('status');
 
 
-            // Cek input
+            // Validasi input
             if (!documentId) {
-
-                status.textContent =
-                    'ID / Token harus diisi.';
-
+                status.textContent = 'ID / Token harus diisi.';
                 return;
             }
 
-
             if (!filename) {
-
-                status.textContent =
-                    'Nama file harus diisi.';
-
+                status.textContent = 'Nama file harus diisi.';
                 return;
             }
 
 
             try {
 
+                // ==========================================
+                // STEP 1
+                // Mendapatkan URL dari generate_token
+                // ==========================================
+
                 status.textContent =
                     'Menghubungi Digilib ITB...';
 
 
-                // Request ke Digilib ITB
-                const response = await fetch(
+                const tokenResponse = await fetch(
                     `https://digilib.itb.ac.id/gdl/generate_token/${documentId}`
                 );
 
 
-                if (!response.ok) {
+                if (!tokenResponse.ok) {
 
                     throw new Error(
-                        `HTTP ${response.status}`
+                        `HTTP ${tokenResponse.status}`
                     );
 
                 }
 
 
-                const data =
-                    await response.json();
+                const tokenData =
+                    await tokenResponse.json();
 
 
                 console.log(
-                    'Response Digilib:',
-                    data
+                    'Token response:',
+                    tokenData
                 );
 
 
+                if (!tokenData.url) {
+
+                    throw new Error(
+                        'URL dari Digilib ITB tidak ditemukan.'
+                    );
+
+                }
+
+
+                // ==========================================
+                // STEP 2
+                // Mengambil halaman dari URL tersebut
+                // ==========================================
+
                 status.textContent =
-                    'Berhasil mendapatkan URL.';
+                    'Mencari URL file PDF...';
+
+
+                const pageResponse =
+                    await fetch(tokenData.url);
+
+
+                if (!pageResponse.ok) {
+
+                    throw new Error(
+                        `HTTP ${pageResponse.status}`
+                    );
+
+                }
+
+
+                const html =
+                    await pageResponse.text();
+
+
+                console.log(
+                    'Halaman berhasil diambil.'
+                );
+
+
+                // ==========================================
+                // STEP 3
+                // Mencari data-url
+                // ==========================================
+
+                const match =
+                    html.match(/data-url="([^"]+)"/);
+
+
+                if (!match) {
+
+                    throw new Error(
+                        'Stream URL tidak ditemukan.'
+                    );
+
+                }
+
+
+                const streamUrl =
+                    match[1];
+
+
+                console.log(
+                    'Stream URL:',
+                    streamUrl
+                );
+
+
+                // ==========================================
+                // STEP 4
+                // Mengambil PDF
+                // ==========================================
+
+                status.textContent =
+                    'Mengunduh PDF...';
+
+
+                const pdfResponse =
+                    await fetch(streamUrl);
+
+
+                if (!pdfResponse.ok) {
+
+                    throw new Error(
+                        `HTTP ${pdfResponse.status}`
+                    );
+
+                }
+
+
+                const type =
+                    pdfResponse.headers.get('content-type') || '';
+
+
+                console.log(
+                    'Content-Type:',
+                    type
+                );
+
+
+                if (!type.toLowerCase().includes('pdf')) {
+
+                    throw new Error(
+                        'Server tidak mengembalikan PDF. Content-Type: ' +
+                        type
+                    );
+
+                }
+
+
+                // ==========================================
+                // STEP 5
+                // Membuat file PDF
+                // ==========================================
+
+                const blob =
+                    await pdfResponse.blob();
+
+
+                console.log(
+                    'PDF berhasil diterima:',
+                    blob.size,
+                    'bytes'
+                );
+
+
+                // ==========================================
+                // STEP 6
+                // Download file
+                // ==========================================
+
+                const downloadUrl =
+                    URL.createObjectURL(blob);
+
+
+                const a =
+                    document.createElement('a');
+
+
+                a.href =
+                    downloadUrl;
+
+                a.download =
+                    filename.endsWith('.pdf')
+                        ? filename
+                        : filename + '.pdf';
+
+
+                document.body.appendChild(a);
+
+                a.click();
+
+                a.remove();
+
+
+                // Membersihkan object URL
+                setTimeout(() => {
+
+                    URL.revokeObjectURL(
+                        downloadUrl
+                    );
+
+                }, 1000);
+
+
+                status.textContent =
+                    'PDF berhasil didownload.';
 
 
             } catch (error) {
 
-                console.error(error);
+                console.error(
+                    'Download gagal:',
+                    error
+                );
 
 
                 status.textContent =
